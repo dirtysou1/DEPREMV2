@@ -4,12 +4,16 @@ import 'package:homescreen/plugins_utils/DeviceInfo.dart';
 import 'package:homescreen/plugins_utils/Location.dart';
 import 'package:homescreen/custom_dialog_box.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
+//import 'package:just_audio/just_audio.dart';
+
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  //final player = AudioPlayer();
+
   LocationService loca1 = new LocationService();
   UserLocation Loca = new UserLocation();
   @override
@@ -18,7 +22,7 @@ class _HomePageState extends State<HomePage> {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/bg.jpg"),
+            image: AssetImage("assets/yol.png"),
             fit: BoxFit.cover,
           ),
         ),
