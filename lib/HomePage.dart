@@ -2,17 +2,45 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:homescreen/plugins_utils/DeviceInfo.dart';
 import 'package:homescreen/plugins_utils/Location.dart';
-import 'package:homescreen/custom_dialog_box.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
-//import 'package:just_audio/just_audio.dart';
+import 'package:audioplayers/audio_cache.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class HomePage extends StatefulWidget {
+
   @override
   _HomePageState createState() => _HomePageState();
+
 }
 
 class _HomePageState extends State<HomePage> {
-  //final player = AudioPlayer();
+
+  Duration _duration = new Duration();
+  Duration _position = new Duration();
+  AudioPlayer advancedPlayer;
+  AudioCache audioCache;
+
+  @override
+  void initState() {
+    super.initState();
+    initPlayer();
+  }
+
+
+  void initPlayer() {
+    advancedPlayer = new AudioPlayer();
+    audioCache = new AudioCache(fixedPlayer: advancedPlayer);
+
+    advancedPlayer.durationHandler = (d) => setState(() {
+      _duration = d;
+    });
+
+    advancedPlayer.positionHandler = (p) => setState(() {
+      _position = p;
+    });
+  }
+
+
 
   LocationService loca1 = new LocationService();
   UserLocation Loca = new UserLocation();
@@ -55,6 +83,10 @@ class _HomePageState extends State<HomePage> {
               child: FlatButton(
                   onPressed: () async {
                     print('yjyyj');
+
+                    advancedPlayer.stop();
+                    advancedPlayer.dispose();
+
                     AwesomeDialog(context: context,animType: AnimType.SCALE,
                         dialogBackgroundColor: Colors.green,
                       dialogType: DialogType.INFO,
@@ -82,6 +114,9 @@ class _HomePageState extends State<HomePage> {
               child: FlatButton(
                 hoverColor: Colors.purpleAccent,
                 onPressed: () async {
+                 // audioCache.play("alarm.mp3",stayAwake: true,mode: );
+                  audioCache.loop("alarm.mp3",stayAwake: true,);
+                 // rr.play('assets/alarm.mp3',stayAwake: true);
                   print("FlatButton");
                   DeviceInfo.getAndroidDeviceInfo();
                   loca1.location.requestPermission();
