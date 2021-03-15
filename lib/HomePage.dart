@@ -1,11 +1,16 @@
+
+
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:homescreen/plugins_utils/DeviceInfo.dart';
 import 'package:homescreen/plugins_utils/Location.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:audioplayers/audio_cache.dart';
 import 'package:audioplayers/audioplayers.dart';
-
+import 'package:volume_watcher/volume_watcher.dart';
+import 'package:battery/battery.dart';
 class HomePage extends StatefulWidget {
 
   @override
@@ -14,6 +19,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
+
+
 
   Duration _duration = new Duration();
   Duration _position = new Duration();
@@ -24,12 +32,13 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     initPlayer();
+    initPlatformState();
   }
 
 
   void initPlayer() {
     advancedPlayer = new AudioPlayer();
-    audioCache = new AudioCache(fixedPlayer: advancedPlayer);
+    audioCache = new AudioCache(fixedPlayer: advancedPlayer,respectSilence: false);
 
     advancedPlayer.durationHandler = (d) => setState(() {
       _duration = d;
@@ -39,9 +48,48 @@ class _HomePageState extends State<HomePage> {
       _position = p;
     });
   }
+  String _platformVersion = 'Unknown';
+  double currentVolume = 0;
+  double initVolume = 0;
+  double maxVolume = 0;
 
 
 
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initPlatformState() async {
+    String platformVersion;
+
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      VolumeWatcher.hideVolumeView = true;
+      platformVersion = await VolumeWatcher.platformVersion;
+    } on PlatformException {
+      platformVersion = 'Failed to get platform version.';
+    }
+
+    double initVolume;
+    double maxVolume;
+    try {
+      initVolume = await VolumeWatcher.getCurrentVolume;
+      maxVolume = await VolumeWatcher.getMaxVolume;
+    } on PlatformException {
+      platformVersion = 'Failed to get volume.';
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+
+    setState(() {
+      _platformVersion = platformVersion;
+      this.initVolume = initVolume;
+      this.maxVolume = maxVolume;
+    });
+  }
+
+
+  final Battery _battery = Battery();
   LocationService loca1 = new LocationService();
   UserLocation Loca = new UserLocation();
   @override
@@ -114,20 +162,33 @@ class _HomePageState extends State<HomePage> {
               child: FlatButton(
                 hoverColor: Colors.purpleAccent,
                 onPressed: () async {
-                 // audioCache.play("alarm.mp3",stayAwake: true,mode: );
-                  audioCache.loop("alarm.mp3",stayAwake: true,);
-                 // rr.play('assets/alarm.mp3',stayAwake: true);
-                  print("FlatButton");
-                  DeviceInfo.getAndroidDeviceInfo();
-                  loca1.location.requestPermission();
 
+
+                  VolumeWatcher.setVolume(maxVolume); //sesi maximuma çıkarır
+
+                  //batarya bilgisini alır
+                  final int batteryLevel = await _battery.batteryLevel;
+                  String batter = batteryLevel.toString();
+                  print( "Battery level is: $batter");
+
+
+                  //telefonun modelini öğrenir
+                  DeviceInfo.getAndroidDeviceInfo();
+
+                  //konum için gerekli izinleri ister
+                  loca1.location.requestPermission();
                   loca1.location.serviceEnabled();
                   loca1.location.requestService();
                   loca1.location.hasPermission();
 
+
+                  //konumu alır
                   // ignore: non_constant_identifier_names
                   final LOC = (await loca1.location.getLocation()).toString();
                   print(LOC);
+
+
+                  //popup mesajını ekranda gösterir
                   AwesomeDialog(context: context,animType: AnimType.SCALE,
                     dialogBackgroundColor: Colors.grey,
                     dialogType: DialogType.INFO,
@@ -141,7 +202,12 @@ class _HomePageState extends State<HomePage> {
                     btnOkOnPress: () {},
                   )..show();
 
-                  // print('$Loca$loca1');
+                  //alarmı çalar
+                  audioCache.loop("alarm.mp3",stayAwake: true,);
+
+
+
+
                 },
                 child: Image(
                   image: new AssetImage('assets/nuke.png'),
@@ -149,7 +215,7 @@ class _HomePageState extends State<HomePage> {
 
                 ),
               ),
-            width: 200,height: 200,),
+            width: 200,height: 170),
 
           ],
         ),

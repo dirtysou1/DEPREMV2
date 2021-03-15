@@ -1,5 +1,6 @@
 import 'package:device_info/device_info.dart';
 
+
 class DeviceInfo {
   static Future<String> getAndroidDeviceInfo() async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -14,4 +15,7 @@ class DeviceInfo {
     print('Running on ' + iosInfo.utsname.machine);
     return iosInfo.model;
   }
+
+
+
 }
